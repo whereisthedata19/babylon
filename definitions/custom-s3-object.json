@@ -1,0 +1,104 @@
+{
+  "entityDefs" : [
+
+    {
+      "superTypes" : [ "DataSet" ],
+      "category" : "ENTITY",
+      "name" : "custom_s3_object_v2",
+      "description" : "Custom s3 object definition",
+      "typeVersion" : "1.0",
+      "attributeDefs" : [
+        {
+            "name" : "description",
+            "typeName" : "string",
+            "isOptional" : true,
+            "cardinality" : "SINGLE",
+            "valuesMinCount" : 1,
+            "valuesMaxCount" : 1,
+            "isUnique" : false,
+            "isIndexable" : false
+          },
+          {
+            "name" : "bucket",
+            "typeName" : "long",
+            "isOptional" : false,
+            "cardinality" : "SINGLE",
+            "valuesMinCount" : 1,
+            "valuesMaxCount" : 1,
+            "isUnique" : false,
+            "isIndexable" : true
+          },
+          {
+            "name" : "path",
+            "typeName" : "long",
+            "isOptional" : false,
+            "cardinality" : "SINGLE",
+            "valuesMinCount" : 1,
+            "valuesMaxCount" : 1,
+            "isUnique" : false,
+            "isIndexable" : true
+          },
+          {
+            "name" : "createdBy",
+            "typeName" : "string",
+            "isOptional" : true,
+            "cardinality" : "SINGLE",
+            "valuesMinCount" : 1,
+            "valuesMaxCount" : 1,
+            "isUnique" : false,
+            "isIndexable" : true
+          },
+          {
+            "name" : "createdTime",
+            "typeName" : "long",
+            "isOptional" : false,
+            "cardinality" : "SINGLE",
+            "valuesMinCount" : 1,
+            "valuesMaxCount" : 1,
+            "isUnique" : false,
+            "isIndexable" : true
+          },
+          {
+            "name" : "fileFormat",
+            "typeName" : "string",
+            "isOptional" : true,
+            "cardinality" : "SINGLE",
+            "valuesMinCount" : 1,
+            "valuesMaxCount" : 1,
+            "isUnique" : false,
+            "isIndexable" : true
+          },
+          {
+            "name" : "owner",
+            "typeName" : "string",
+            "isOptional" : false,
+            "cardinality" : "SINGLE",
+            "valuesMinCount" : 1,
+            "valuesMaxCount" : 1,
+            "isUnique" : false,
+            "isIndexable" : true
+          },
+          {
+            "name" : "fileFormat",
+            "typeName" : "string",
+            "isOptional" : true,
+            "cardinality" : "SINGLE",
+            "valuesMinCount" : 1,
+            "valuesMaxCount" : 1,
+            "isUnique" : false,
+            "isIndexable" : true
+          },
+          {
+            "name" : "acl",
+            "typeName" : "string",
+            "isOptional" : true,
+            "cardinality" : "SINGLE",
+            "valuesMinCount" : 1,
+            "valuesMaxCount" : 1,
+            "isUnique" : false,
+            "isIndexable" : true
+          }
+      ]
+    }
+  ]
+}
