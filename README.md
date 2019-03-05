@@ -7,13 +7,16 @@
 888   d88P d8888888888 888   d88P   888     888     Y88b. .d88P 888   Y8888 
 8888888P" d88P     888 8888888P"    888     88888888 "Y88888P"  888    Y888 
 
+
 ABOUT:
 ---------------------------------->
+
 the SDK is written to provide simplified way to write data into S3 object storage ,
 and to document the data in Apache Atlas data catalog . 
 
 OBJECT STORAGE SCHEME:
 ---------------------------------->
+
 qualifiedName
 -   Type : string
 -   Created by: auto / user 
