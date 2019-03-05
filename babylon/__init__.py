@@ -13,7 +13,7 @@ import json
 
 
 class Config:
-    def __init__(self,s3_access, s3_secret , s3_endpoint ,bucket,data_provider,stage='raw',partition_type='a',atlas_username="admin" , atlas_password="admin", atlas_endpoint="localhost:21000" ):
+    def __init__(self,s3_access, s3_secret , s3_endpoint ,bucket,data_provider,stage='raw',partition_type='a',atlas_username="admin" , atlas_password="admin", atlas_endpoint="localhost:21000",type_name = 'custom_s3_object_v5' ):
         self.bucket = bucket 
         self.data_provider = data_provider
         self.partition_type = partition_type
@@ -25,10 +25,11 @@ class Config:
         self.atlas_username = atlas_username
         self.atlas_password = atlas_password
         self.atlas_endpoint = atlas_endpoint
+        self.type_name = type_name
     
 
 
-    def generate_object_metdata(self,partition_type):
+    def generate_object_metadata(self,partition_type):
     
     ### returns ('s3 path' , 'file name')
     ### partition types
@@ -61,85 +62,82 @@ class Config:
             return  ('/', str(epoc) + "_" + str(uuid.uuid4())[-4:])
 
     
-    def create_atlas_json(self,metdata= {}):
-        (s3_path , file_name) = self.generate_object_metdata(self.partition_type)
-        
-        if "qualifiedName" in metdata:
-            qualifiedName = metdata["qualifiedName"]
-        else: 
-            qualifiedName  =  "/" + self.bucket + "/"+ self.data_provider +"/" +self.stage  +  s3_path + file_name  
+    def create_object_metadata(self,metadata= {}):
+        (s3_path , file_name) = self.generate_object_metadata(self.partition_type)
 
-        if "name" in metdata:
-            name = metdata["name"]
-        else: name = file_name
+        if "typeName" not in metadata:
+            metadata["typeName"] = self.type_name
         
-        if "fileFormat" in metdata:
-            fileFormat = metdata["fileFormat"]
-        else: 
-            fileFormat = ""
+        if "qualifiedName" not in metadata:
+            metadata["qualifiedName"]  =  "/" + self.bucket + "/"+ self.data_provider +"/" +self.stage  +  s3_path + file_name  
 
-        if "description" in metdata:
-            description = metdata["description"]
-        else: 
-            description = "S3 object"
-
-        if "createBy" in metdata:
-            createBy = metdata["createBy"]
-        else: 
-            createBy = ""
+        if "name" not in metadata:
+            metadata["name"] = file_name
         
-        if "createTime" in metdata:
-            createTime = metdata["createTime"]
-        else: 
+        if "path" not in metadata:
+            metadata["path"] = s3_path
+        
+        if "fileFormat" not in metadata:
+            metadata["fileFormat"] = ""
+
+        if "description" not in metadata:
+            metadata["description"] = "S3 object"
+
+        if "createBy" not in metadata:
+            metadata["createBy"] = ""
+        
+        if "createTime" not in metadata:
             gmtime = time.gmtime(calendar.timegm(time.gmtime()))
-            createTime =  calendar.timegm(time.gmtime())
+            metadata["createTime"] =  calendar.timegm(time.gmtime())
 
-        if "owner" in metdata:
-            owner = metdata["owner"]
-        else: 
-            owner = ""
+        if "owner" not in metadata:
+            metadata["owner"] = ""
         
-        if "acl" in metdata:
-            acl = metdata["acl"]
-        else: 
-            acl = ""
+        if "acl" not in metadata:
+            metadata["acl"] = ""
 
+        return metadata
+
+    def atlas_entity_format(self,metadata):
         json_string = json.dumps({"entities":[
                                                 {
-                                                    "typeName" : "custom_s3_object_1",
-                                                    "qualifiedName":qualifiedName,
-                                                    "name":name,
-                                                    "fileFormat":fileFormat,
-                                                    "description":description,
-                                                    "createBy":createBy,
-                                                    "createTime":createTime,
-                                                    "owner":owner,
-                                                    "acl":acl
+                                                    "typeName" : metadata["typeName"],
+                                                    "attributes": {
+                                                        "qualifiedName":metadata["qualifiedName"],
+                                                        "name":metadata["name"],
+                                                        "fileFormat":metadata["fileFormat"],
+                                                        "description":metadata["description"],
+                                                        "createdBy":metadata["createBy"],
+                                                        "createdTime":metadata["createTime"],
+                                                        "owner":metadata["owner"],
+                                                        "acl":metadata["acl"]
+                                                    }
                                                 }
                                             ]
                                         }
                                     )
 
-        print(json_string)
+        #print(json_string)
         return json_string
-
-    def upload_data(self,file,path,object_metadata):
-        self.s3.upload_file(file,self.bucket)
-
-    def tag_data(self,object_metadata):
+        
+    def create_atlas_entity(self, metadata):
+        formated_metadata = self.atlas_entity_format(metadata)
+        print("")
+        print(formated_metadata)
         headers = {'Content-Type' : 'application/json', 'Accept':'application/json'}
-        r = requests.post(self.atlas_endpoint,auth=HTTPBasicAuth(self.atlas_username,self.atlas_password),headers=headers, data = object_metadata)
+        r = requests.post(self.atlas_endpoint,auth=HTTPBasicAuth(self.atlas_username,self.atlas_password),headers=headers, data = formated_metadata)
+        print("")
         print(r.text)
+        return r
 
 
-    def upload_and_tag(self,file,path,metadata):
-        object_metadata = self.create_atlas_json(metadata)
-        self.tag_data(object_metadata)
+    def upload_file(self,file,updated_metadata = {}):
+        metadata = self.create_object_metadata(updated_metadata)
+        with open(file, 'rb') as data:
+            self.s3.upload_fileobj(data, self.bucket, metadata["path"]+metadata["name"])
+            print("Object "+metadata["name"]+" wirtten to "+ metadata["path"]+" succsessfully")
+            self.create_atlas_entity(metadata)
 
-        
-
-
-        
 def main():
     
     babylon = Config(s3_access = "CXAD0ORH0HPU3FJ4IKCQ",
@@ -147,14 +145,16 @@ def main():
         s3_endpoint = "http://10.3.178.217:8000",
         bucket = "example-project",
         data_provider = "example-source",
-        stage='p1',
+        stage='w',
         partition_type = 'h',
         atlas_username = "admin",
         atlas_password = "admin",
         atlas_endpoint = "http://127.0.0.1:21000/api/atlas/v2/entity/bulk",
+        type_name = 'custom_s3_object_v5'
          )
     #babylon.create_atlas_json()
-    babylon.upload_and_tag("file","path",{})
+    #babylon.upload_and_tag("file","path",{})
+    babylon.upload_file(file='../tmp/test.txt' )
 
 
 main()
